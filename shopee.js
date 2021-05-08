@@ -1,6 +1,6 @@
 const pw = require('playwright-core')
 const XLSX = require('xlsx')
-const crawlab = require('crawlab-sdk')
+const db = require('./db')
 const events = require('events')
 const cron = require('node-schedule')
 
@@ -161,7 +161,7 @@ const crawler = async (page, title, worker, p) => {
     console.log(`total crawl count: ${crawlCounter}`)
 
     if (!!save) {
-      await crawlab.saveItem({ title: t })
+      await db.saveItem({ title: t })
     }
   }
 }
@@ -209,12 +209,15 @@ const workers = async () => {
 }
 
 const main = async () => {
+  if (!!save) {
+    await db.ensureIndex()
+  }
   var datetime = new Date()
   console.log(datetime.toISOString())
   const doWorkers = await workers()
   await Promise.all(doWorkers)
   if (!!save) {
-    await crawlab.close()
+    await db.close()
   }
   for (const b of bs) {
     await b.close()
